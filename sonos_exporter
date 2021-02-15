@@ -9,11 +9,13 @@ import re
 import requests
 import soco
 import xml.etree.ElementTree as ElementTree
+import logging
 
 from prometheus_client.core import REGISTRY, GaugeMetricFamily
 
 
 def main():
+    logging.basicConfig(level=logging.INFO)
     parser = argparse.ArgumentParser(
         description="Prometheus exporter for Sonos networks")
     parser.add_argument("--address", default="localhost:1915",
@@ -23,7 +25,7 @@ def main():
     host, port = args.address.split(":", 1)
 
     REGISTRY.register(Collector())
-
+    logging.info("Start server %s:%s" % (host, port))
     server = http.server.HTTPServer((host, int(port)), prometheus_client.MetricsHandler)
     try:
         server.serve_forever()
@@ -56,7 +58,6 @@ class Collector(object):
             labels=["player", "device"])
         tx_packets = GaugeMetricFamily("sonos_tx_packets", "Transmitted packets",
             labels=["player", "device"])
-
         zones = soco.discover()
         if zones is None:
             return
